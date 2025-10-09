@@ -212,3 +212,7 @@ __pycache__/
 .DS_Store
 .dlt
 dbt_packages/
+
+# DuckDB binaries
+*.duckdb
+*.duckdb.wal
