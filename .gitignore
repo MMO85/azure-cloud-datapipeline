@@ -216,3 +216,7 @@ dbt_packages/
 # DuckDB binaries
 *.duckdb
 *.duckdb.wal
+
+# DuckDB
+*.duckdb
+*.duckdb.wal
