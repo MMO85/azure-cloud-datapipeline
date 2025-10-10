@@ -6,8 +6,11 @@ from dagster_dbt import DbtCliResource, DbtProject, dbt_assets
 from dagster import Definitions
 from dagster_dlt import dlt_assets, DagsterDltResource
 import sys
+import os
 
-db_path = str(Path(__file__).parents[1] / "data_warehouse/job_ads.duckdb")
+DUCKDB_PATH = os.getenv("DUCKDB_PATH")
+DBT_PROFILES_DIR = os.getenv("DBT_PROFILES_DIR")
+#db_path = str(Path(__file__).parents[1] / "data_warehouse/job_ads.duckdb")
 sys.path.insert(0, "../data_extract_load")
 from load_data_jobs import jobsearch_source
 
@@ -19,7 +22,7 @@ dlt_resource = DagsterDltResource()
     dlt_pipeline= dlt.pipeline(
         pipeline_name="HRpipeline",
         dataset_name="staging",
-        destination=dlt.destinations.duckdb(db_path)
+        destination=dlt.destinations.duckdb(DUCKDB_PATH)
     
     )
 )
@@ -27,12 +30,12 @@ def dlt_load(context:dg.AssetExecutionContext, dlt:DagsterDltResource):
     yield from dlt.run(context=context)
     
 
-project_root = Path(__file__).resolve().parents[1]      # ← index=1 یعنی دو سطح بالاتر
-dbt_project_directory = project_root / "data_transformation" / "HRpipeline"
 
-profiles_dir = Path.home() / ".dbt"
+dbt_project_directory = Path(__file__).parents[1] / "data_transformation" 
 
-dbt_project = DbtProject(project_dir=dbt_project_directory, profiles_dir=profiles_dir)
+
+
+dbt_project = DbtProject(project_dir=dbt_project_directory, profiles_dir=Path(DBT_PROFILES_DIR))
 
 #CLI commands e.g. dbt build, dbt run, dbt test
 dbt_resource=DbtCliResource(project_dir= dbt_project)   
@@ -49,7 +52,7 @@ def dbt_models(context: dg.AssetExecutionContext, dbt: DbtCliResource):
 #jobs
 job_dlt = dg.define_asset_job("job_dlt", selection=dg.AssetSelection.keys("dlt_jobsearch_source_jobsearch_resource"))
 
-job_dbt = dg.define_asset_job("job_dbt", selection=dg.AssetSelection.key_prefixes("WH","marts"))
+job_dbt = dg.define_asset_job("job_dbt", selection=dg.AssetSelection.key_prefixes("DWH","marts"))
 
 
 schedule_dlt = dg.ScheduleDefinition(job=job_dlt, cron_schedule="0 9 * * MON")  # every Monday at 9am

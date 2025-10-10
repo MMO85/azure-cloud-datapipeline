@@ -1,10 +1,10 @@
 from pathlib import Path
 import duckdb
 import pandas as pd
+import os
 
 # data warehouse directory
-db_path = str(Path(__file__).parents[1] / "data_warehouse/job_ads.duckdb")
-
+DB_PATH= os.getenv("DUCKDB_PATH")   
 def query_all_job_listings():
     tables = [
         "MART_BYGG_OCH_ANLAGGNING",
@@ -14,7 +14,7 @@ def query_all_job_listings():
 
     data = {}
    
-    with duckdb.connect(db_path, read_only=True) as conn:
+    with duckdb.connect(DB_PATH, read_only=True) as conn:
        
            for table in tables:
             query = f"""
