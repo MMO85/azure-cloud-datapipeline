@@ -4,7 +4,8 @@ import pandas as pd
 import os
 
 # data warehouse directory
-DB_PATH= os.getenv("DUCKDB_PATH")   
+#DB_PATH= os.getenv("DUCKDB_PATH")  
+FILES_SHARE_PATH = Path("/mnt/data/job_ads.duckdb") 
 def query_all_job_listings():
     tables = [
         "MART_BYGG_OCH_ANLAGGNING",
