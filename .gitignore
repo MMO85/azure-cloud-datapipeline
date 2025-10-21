@@ -267,3 +267,8 @@ dbt_packages/
 *.duckdb.wal
 
 azure_cli
+*.env
+*.key
+*.json
+
+
