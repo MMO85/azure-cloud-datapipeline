@@ -22,10 +22,10 @@ resource "azurerm_storage_blob" "upload_csv" {
   type                   = "Block"
   source                 = "data/${each.value}"
 }
-# resource "azurerm_storage_blob" "upload_csv" {
-#   name                   = "Totalt.csv"
-#   storage_account_name   = azurerm_storage_account.my_storage.name
-#   storage_container_name = azurerm_storage_container.csv_container.name
-#   type                   = "Block"
-#   source                 = "data/Totalt.csv"
-# }
+ resource "azurerm_storage_blob" "upload_csv" {
+   name                   = "Totalt.csv"
+   storage_account_name   = azurerm_storage_account.my_storage.name
+   storage_container_name = azurerm_storage_container.csv_container.name
+   type                   = "Block"
+   source                 = "data/Totalt.csv"
+ }
