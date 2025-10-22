@@ -5,6 +5,7 @@ name: 'HRpipeline'
 version: '1.0.0'
 
 # This setting configures which "profile" dbt uses for this project.
+# Profiles name has changed from snowflake to duckdb. 
 profile: 'dbt_duckdb_docker_local'
 
 # These configurations specify where dbt should look for different types of files.
