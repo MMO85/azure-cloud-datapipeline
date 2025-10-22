@@ -253,3 +253,6 @@ with tabs[2]:
 
         else:
             st.info("Ingen data för vald kombination av filter.")
+
+
+        # dashboard/dashboard2.py ends here
