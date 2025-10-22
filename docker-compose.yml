@@ -16,3 +16,5 @@ services:
     image: crbigdatadev7.azurecr.io/dashboard:latest
     ports:
       - "8501:8501"
+
+      ###-- This docker-compose file sets up two services: dwh_pipeline and dashboard.
