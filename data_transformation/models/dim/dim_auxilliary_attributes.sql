@@ -8,3 +8,5 @@ select
     max(driving_license_required) as driving_license_required
 from src_auxilliary_attributes
 group by auxilliary_id
+
+### --This model creates a dimension table for auxiliary attributes related to job postings.
