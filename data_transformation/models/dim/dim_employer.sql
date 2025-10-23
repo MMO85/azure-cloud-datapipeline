@@ -13,3 +13,5 @@ select
     max(workplace_country) as workplace_country
 from src_employer
 group by employer_name
+
+### --This model creates a dimension table for employers related to job postings.
