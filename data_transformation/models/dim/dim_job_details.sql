@@ -9,3 +9,5 @@ select
     max(scope_of_work_max) as scope_of_work_max
 from src_job_details
 group by job_details_id
+
+### --This SQL file is for creating the dim_job_details dimension table.
