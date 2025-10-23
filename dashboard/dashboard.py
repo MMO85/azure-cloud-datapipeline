@@ -1,9 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-
-# اگر از نسخه‌ای استفاده می‌کنی که یک DF ترکیبی با ستون source_mart برمی‌گردونه:
-from dashboard.connect_data_warehouse import query_job_listings
+from connect_data_warehouse import query_job_listings
 
 # ----------------------------
 # Ladda data
