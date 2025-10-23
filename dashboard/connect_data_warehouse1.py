@@ -13,21 +13,14 @@ def _connect_ro():
         raise FileNotFoundError(f"DuckDB file not found: {p}")
     return duckdb.connect(str(p), read_only=True)
 
-
 def query_job_listings() -> pd.DataFrame:
     """
-    داده‌ها را از سه مارت زیر لود و در یک DataFrame ترکیب می‌کند:
-      1. marts.mart_bygg_och_anlaggning
-      2. marts.mart_kultur_media_design
-      3. marts.mart_pedagogik
+    داده‌ی مارت «bygg och anläggning» را لود می‌کند.
+    جدول: marts.mart_bygg_och_anlaggning
     """
-    marts = [
-        "marts.mart_bygg_och_anlaggning",
-        "marts.mart_kultur_media_design",
-        "marts.mart_pedagogik",
-    ]
-
-    base_query = """
+    with _connect_ro() as conn:
+        # اگر نام ستون‌ها کمی تفاوت داشت، این SELECT آن‌ها را به نام‌های مورد انتظار نگاشت می‌کند
+        q = """
         SELECT
             COALESCE(vacancies, 0)                      AS vacancies,
             occupation                                  AS occupation,
@@ -42,17 +35,6 @@ def query_job_listings() -> pd.DataFrame:
             duration                                     AS duration,
             workplace_region                             AS workplace_region,
             job_description_id                           AS job_description_id
-        FROM {mart}
-    """
-
-    with _connect_ro() as conn:
-        all_dfs = []
-        for mart in marts:
-            q = base_query.format(mart=mart)
-            df = conn.execute(q).df()
-            df["source_mart"] = mart  # ستون برای شناسایی منبع
-            all_dfs.append(df)
-
-        combined_df = pd.concat(all_dfs, ignore_index=True)
-
-    return combined_df
+        FROM marts.mart_bygg_och_anlaggning
+        """
+        return conn.execute(q).df()
