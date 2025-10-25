@@ -1,82 +1,86 @@
-# azure-cloud-datapipeline
-## 💰 Task 2 – Cost Estimation
+## 💰 Task 2 – Cost Estimation (Azure Deployment – HR Analytics Project)
 
-This section provides an estimation of the **monthly cost** of running the HR Analytics data pipeline and dashboard on Microsoft Azure.  
-All resources are deployed in the **Sweden Central** region using the **Pay-as-you-go** pricing model.  
-The purpose of this estimation is to give management a clear overview of what it would cost to keep the system running continuously in production.
+This section presents the **final cost estimation** for the HR Analytics – Cloud Deployment project, based on the official calculation from **Azure Pricing Calculator** (Sweden Central region, Pay-as-you-go model).
 
----
-
-### 🧩 Overview of Resources
-
-The project consists of four main Azure components:
-
-1. **Data Extraction & Transformation (Dagster + DLT)**  
-   Runs once per day inside a **Container Instance** that connects to the JobTech API and updates the DuckDB data warehouse.
-
-2. **Data Visualization (Streamlit Dashboard)**  
-   Hosted on an **Azure App Service** under a Basic (B1) plan so it remains online 24/7 and accessible for HR specialists.
-
-3. **Data & File Storage**  
-   Raw CSV/JSON data, transformed files and logs are stored in a **Storage Account** (Blob Storage V2).
-
-4. **Container Registry**  
-   A private **Azure Container Registry (ACR)** stores Docker images for the Dagster pipeline and Streamlit dashboard.
+All resources used in the project are included:  
+- Streamlit dashboard (App Service)  
+- Dagster ETL container (ACI)  
+- Docker image storage (ACR)  
+- Blob storage for raw and processed data (Storage Account)
 
 ---
 
 ### 📊 Estimated Monthly Costs
 
-| Component | Azure Service | Configuration / Usage | Est. Monthly Cost (EUR) | Est. Monthly Cost (SEK) |
-|------------|----------------|------------------------|--------------------------|--------------------------|
-| **Streamlit Dashboard** | App Service Plan (ASP-rcbigdatadev-8676) | Linux B1 plan, Always On, 1 instance | **€ 12.00** | ≈ SEK 136 |
-| **Dagster Pipeline** | Azure Container Instance (dagstercontainer) | 1 vCPU + 4 GB RAM, 1 hr/day × 30 days | **€ 1.85** | ≈ SEK 21 |
-| **Docker Images** | Azure Container Registry (crbigdatadev7) | Basic tier (10 GB included), 3 GB used | **€ 4.60** | ≈ SEK 52 |
-| **Data Storage** | Azure Storage Account (stabigdatadev) | Blob Storage V2 Hot tier, 5 GB LRS | **€ 1.05** | ≈ SEK 12 |
-| **Network + Monitoring** | Bandwidth + Application Insights | ~10 GB outbound traffic + basic logs | **€ 0.50** | ≈ SEK 6 |
-| **Total Estimated Cost** | | | **≈ € 19.5 / month** | **≈ SEK 225 / month** |
+| Component | Azure Service | Configuration / Usage | Monthly Cost (USD) | Notes |
+|------------|----------------|------------------------|--------------------|-------|
+| **Streamlit Dashboard** | App Service (Linux, B1 Plan) | 1 instance • 1 vCPU • 1.75 GB RAM • 730 hours/month | **$13.14** | Always-on web app for HR specialists |
+| **Dagster Pipeline** | Azure Container Instance | 1 vCPU • 4 GB RAM • 108,000 seconds/month (≈ 1 hour/day) | **$2.01** | Runs ETL & DLT jobs daily |
+| **Container Registry** | Azure Container Registry (Basic Tier) | 1 registry • 3 GB used (out of 10 GB included) | **$5.00** | Stores Docker images for Streamlit + Dagster |
+| **Data Storage** | Azure Storage Account (Blob Hot, LRS) | 5 GB capacity • 10×10k Write • 10×10k List • 10×10k Read ops | **$1.14** | Stores raw / processed data + logs |
+| **Total Estimated Cost** |  |  | **≈ $21.29 per month** |  |
 
 ---
 
-### ⚙️ Assumptions and Methodology
+### ⚙️ Breakdown and Technical Context
 
-- **Region:** Sweden Central  
-- **Pricing model:** Pay-as-you-go (no reserved instances)  
-- **Pipeline schedule:** Dagster container runs **once per day**, runtime ≈ 1 hour.  
-- **Dashboard:** App Service (Streamlit) is **always on** for users.  
-- **DuckDB:** Runs locally inside the container, so no extra database compute cost.  
-- **Storage usage:** ~5 GB in Hot tier (LRS replication).  
-- **Container Registry:** 3 GB used within the Basic tier (10 GB included).  
-- **Cosmos DB accounts** were used only for testing and are **excluded** from active costs.
+- **App Service (dashdash)**  
+  Hosts the Streamlit dashboard. The Basic (B1) plan ensures 24/7 uptime with 1 vCore + 1.75 GB RAM.  
+  This service is the largest cost driver (~62% of total).
+
+- **Azure Container Instance (dagstercontainer)**  
+  Executes the daily ETL pipeline. With 1 vCore + 4 GB RAM, runtime 1 hour/day, it costs roughly $2/month.
+
+- **Azure Container Registry (crbigdatadev7)**  
+  Maintains two Docker images (Dagster + Streamlit). Using the Basic tier (10 GB included), actual usage is ~3 GB.
+
+- **Azure Storage Account (stabigdatadev)**  
+  Keeps job-ad data fetched from JobTech API, transformed datasets, and log files.  
+  Using 5 GB Hot tier with moderate read/write operations results in ≈ $1.14/month.
 
 ---
 
-### 🔍 Cost Drivers and Optimization Options
+### 🔧 Assumptions
 
-| Category | Explanation | Optimization Tip |
-|-----------|--------------|------------------|
-| **App Service Plan** | Major cost (~60 % of total). Keeps dashboard always online. | Could switch to **Free (F1)** or **Shared (D1)** plan for testing environments. |
-| **Container Registry** | Stores Docker images (3 GB used). | Move images to **Docker Hub** → save € 4–5 / month. |
-| **Storage Account** | Minimal cost; scales with dataset size. | Change tier to **Cool** if data is accessed rarely. |
-| **Container Instance** | Lightweight cost for ETL execution. | Batch multiple jobs in one run to keep runtime short. |
+| Parameter | Value / Description |
+|------------|---------------------|
+| **Region** | Sweden Central |
+| **Pricing model** | Pay-as-you-go |
+| **Pipeline schedule** | Daily (1 hour runtime per day) |
+| **Dashboard uptime** | Always on |
+| **Storage usage** | ≈ 5 GB Hot LRS |
+| **Registry usage** | ≈ 3 GB within 10 GB Basic tier |
+| **Database** | DuckDB embedded (local compute included in ACI runtime) |
+| **Cosmos DB** | Excluded (test only, no cost in final estimate) |
 
-With small optimizations, the monthly cost could drop below **€ 10 / SEK 115**, making the deployment very economical for a small data-engineering team.
+---
+
+### 📈 Optimization Opportunities
+
+| Category | Optimization | Potential Saving |
+|-----------|---------------|------------------|
+| **App Service Plan** | Switch to **Free (F1)** or **Shared (D1)** during development | − $13 / month |
+| **Container Registry** | Use **Docker Hub** (public) instead of private ACR | − $5 / month |
+| **Storage Tier** | Move to **Cool Tier** for infrequently accessed data | − 30–40 % of storage cost |
+| **ETL Runtime** | Batch multiple jobs to reduce execution time | − $1–2 / month |
+
+With these optimizations, the monthly cost could drop to **$10–12 (€9–11 / ≈ SEK 120–135)** while maintaining functionality.
 
 ---
 
 ### 🧾 References
 
 - [Azure Pricing Calculator](https://azure.microsoft.com/en-us/pricing/calculator/)  
-- [Azure App Service Pricing Details](https://azure.microsoft.com/en-us/pricing/details/app-service/linux/)  
+- [Azure App Service (Linux) Pricing](https://azure.microsoft.com/en-us/pricing/details/app-service/linux/)  
 - [Azure Container Instances Pricing](https://azure.microsoft.com/en-us/pricing/details/container-instances/)  
-- [Azure Blob Storage Pricing](https://azure.microsoft.com/en-us/pricing/details/storage/blobs/)  
-- [Azure Container Registry Pricing](https://azure.microsoft.com/en-us/pricing/details/container-registry/)
+- [Azure Container Registry Pricing](https://azure.microsoft.com/en-us/pricing/details/container-registry/)  
+- [Azure Blob Storage Pricing](https://azure.microsoft.com/en-us/pricing/details/storage/blobs/)
 
 ---
 
 ### ✅ Summary
 
-> The total estimated cost for running the **HR Analytics – Cloud Deployment** pipeline is around  
-> **€ 19.5 per month (≈ SEK 225)** under current usage conditions.  
-> This setup provides a scalable, automated, and continuously available analytics platform for HR talent acquisition specialists.
-
+> **Total Estimated Cloud Cost:** ≈ **$21.29 / month**  
+> (≈ €19.6  or  SEK 230 per month)  
+>  
+> This configuration provides a reliable and scalable cloud setup for the HR Analytics data pipeline, enabling daily data updates and a 24/7 dashboard for talent acquisition specialists.
