@@ -1,14 +1,21 @@
 FROM python:3.11
 
-#ENV DBT_PROFILES_DIR=/pipeline \
- #   DUCKDB_PATH=/data_warehouse/job_ads.duckdb
-
 WORKDIR /pipeline/orchestration
 
+# Environment
+ENV DAGSTER_HOME=/opt/dagster/app/dagster_home
+ENV DBT_PROFILES_DIR=/pipeline/data_transformation
+ENV DUCKDB_PATH=/pipeline/data_warehouse/job_ads.duckdb
+
+# Copy files
+COPY dagster_home/ /opt/dagster/app/dagster_home/
 COPY data_extract_load/ /pipeline/data_extract_load/
 COPY data_transformation/ /pipeline/data_transformation/
 COPY orchestration/ /pipeline/orchestration/
 
+# Install dependencies
 RUN pip install dagster dagster-dbt dagster-dlt dagster-webserver dbt-core dbt-duckdb dlt duckdb plotly
+
+EXPOSE 3000
 
 CMD ["dagster", "dev", "-f", "definitions.py", "-h", "0.0.0.0", "-p", "3000"]
