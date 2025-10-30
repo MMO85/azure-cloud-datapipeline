@@ -1,18 +1,18 @@
 from pathlib import Path
 import dlt
 import dagster as dg
-#from dagster_dlt import dlt_resource, dlt_source
 from dagster_dbt import DbtCliResource, DbtProject, dbt_assets
 from dagster import Definitions
 from dagster_dlt import dlt_assets, DagsterDltResource
 import sys
 import os
 
-DUCKDB_PATH = os.getenv("DUCKDB_PATH")
-DBT_PROFILES_DIR = os.getenv("DBT_PROFILES_DIR")
-#db_path = str(Path(__file__).parents[1] / "data_warehouse/job_ads.duckdb")
+
 sys.path.insert(0, "../data_extract_load")
 from load_data_jobs import jobsearch_source
+
+DUCKDB_PATH = os.getenv("DUCKDB_PATH")
+DBT_PROFILES_DIR = os.getenv("DBT_PROFILES_DIR")
 
 #dlt assets
 dlt_resource = DagsterDltResource()
@@ -22,9 +22,9 @@ dlt_resource = DagsterDltResource()
     dlt_pipeline= dlt.pipeline(
         pipeline_name="HRpipeline",
         dataset_name="staging",
-        destination=dlt.destinations.duckdb(DUCKDB_PATH)
+        destination=dlt.destinations.duckdb(DUCKDB_PATH),
     
-    )
+    ),
 )
 def dlt_load(context:dg.AssetExecutionContext, dlt:DagsterDltResource):
     yield from dlt.run(context=context)
@@ -55,7 +55,7 @@ job_dlt = dg.define_asset_job("job_dlt", selection=dg.AssetSelection.keys("dlt_j
 job_dbt = dg.define_asset_job("job_dbt", selection=dg.AssetSelection.key_prefixes("DWH","marts"))
 
 
-schedule_dlt = dg.ScheduleDefinition(job=job_dlt, cron_schedule="0 9 * * MON")  # every Monday at 9am
+schedule_dlt = dg.ScheduleDefinition(job=job_dlt, cron_schedule="0 9 * * *") #UTC
 @dg.asset_sensor(job=job_dbt, asset_key=dg.AssetKey("dlt_jobsearch_source_jobsearch_resource"))
 
 def dlt_load_sensor():
@@ -68,5 +68,5 @@ defs = dg.Definitions(
     resources={"dlt": dlt_resource, "dbt": dbt_resource},
     jobs=[job_dlt, job_dbt],
     schedules=[schedule_dlt],
-    sensors=[dlt_load_sensor]
+    sensors=[dlt_load_sensor],
 )
