@@ -1,4 +1,125 @@
-## 💰 Task 2 – Cost Estimation (Azure Deployment – HR Analytics Project)
+
+#  HR Analytics – Cloud Deployment (Task 1)
+
+##  Overview
+The **HR Analytics Cloud Project** demonstrates a modern data-engineering deployment on **Microsoft Azure**.  
+It collects job-advertisement data from the **Arbetsförmedlingen (JobTech) API**, processes it automatically, stores it in a local analytical database (**DuckDB**), and visualizes insights in a **Streamlit** dashboard.  
+All components run in Docker containers orchestrated on Azure; intermediate data and logs are shared through a mounted volume (`/mnt/data/`).
+
+---
+
+##  Azure Resources Used
+| Resource | Type | Purpose |
+|-----------|------|----------|
+| `dashdash` | App Service | Hosts the live Streamlit dashboard |
+| `ASP-rcbigdatadev-8676` | App Service Plan | Compute plan for App Service |
+| `dagstercontainer` | Azure Container Instance | Runs the Dagster ETL pipeline daily |
+| `stabigdatadev` | Storage Account | Mounted as `/mnt/data/` for shared DuckDB and logs |
+| `crbigdatadev7` | Container Registry (ACR) | Holds Docker images for dashboard and pipeline |
+
+
+---
+
+##  Architecture
+
+```text
+Arbetsförmedlingen API
+      │
+      ▼
+Dagster Pipeline (ACI)
+      │
+      ▼
+DuckDB Database (/mnt/data/job_ads.duckdb)
+      │
+      ▼
+Streamlit Dashboard (App Service)
+```
+
+**Workflow**
+
+1. **Dagster** (running in ACI) fetches new data from the API each day.  
+2. The pipeline transforms and stores the data in a DuckDB file (`/mnt/data/job_ads.duckdb`).  
+3. **Streamlit** (running in App Service) reads the same DuckDB file and renders interactive analytics.  
+4. All files and logs are persisted in Azure Storage (`/mnt/data/`).
+
+---
+
+##  Local Development
+
+```bash
+git clone https://github.com/<your-org>/azure-cloud-datapipeline.git
+cd azure-cloud-datapipeline
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+streamlit run dashboard/dashboard.py
+```
+
+Default local database path → `/mnt/data/job_ads.duckdb`
+
+---
+
+## 🐳 Docker Build and Push
+
+```bash
+az login
+az acr login --name crbigdatadev7
+
+docker compose build dashboard
+docker tag dashboard:latest crbigdatadev7.azurecr.io/dashboard:latest
+docker push crbigdatadev7.azurecr.io/dashboard:latest
+```
+
+---
+
+##  Deployment on Azure
+
+### 1️⃣ Streamlit Dashboard (App Service)
+- Connected to ACR `crbigdatadev7`  
+- Image: `dashboard:latest`  
+- Startup command:
+  ```bash
+  streamlit run dashboard/dashboard.py --server.address=0.0.0.0 --server.port=8501
+  ```
+- App Settings:
+  ```
+  DUCKDB_PATH = /mnt/data/job_ads.duckdb
+  ```
+
+### 2️⃣ Dagster Container Instance
+- Image pulled from ACR  
+- Mounts `/mnt/data/`  
+- Runs daily ETL job that fetches data from the API and updates DuckDB  
+- Logs written to `/mnt/data/logs/`
+
+### 3️⃣ Azure Storage Account
+- Mounted to both containers as `/mnt/data/`  
+- Holds the DuckDB database, logs, and temporary ETL outputs  
+
+---
+
+## 🧾 Environment Variables
+Configure these in **App Service → Configuration → Application Settings**  
+and in the Dagster ACI environment:
+
+```
+DUCKDB_PATH = /mnt/data/job_ads.duckdb
+DLT_STORAGE_PATH = /mnt/data
+API_URL = https://jobstream.api.jobtechdev.se
+```
+
+---
+
+## ✅ Verification
+| Component | Expected Result |
+|------------|----------------|
+| Streamlit App | Loads at https://dashdash.azurewebsites.net |
+| Data Pipeline | Dagster logs confirm daily ETL execution |
+| Storage Account | `job_ads.duckdb` updates after each run |
+| Dashboard KPIs | Display current vacancies and employer insights |
+
+
+##  Task 2 – Cost Estimation (Azure Deployment – HR Analytics Project)
 
 This section presents the **final cost estimation** for the HR Analytics – Cloud Deployment project, based on the official calculation from **Azure Pricing Calculator** (Sweden Central region, Pay-as-you-go model).
 
